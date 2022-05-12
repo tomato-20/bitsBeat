@@ -16,13 +16,20 @@ const run = async () => {
         const movies = database.collection('movies');
 
         //Query movie that has title "Titanic"
-        const result = await movies.findOne({title : 'Titanic'});
-        console.log(result);
+      /*   const result = await movies.findOne({title : 'Titanic'});
+        console.log(result); */
 
         //Query to find movies released in year 1953
+        // find returns cursor that fetches documents in array
         const findResult = await movies.find({year : 1953});
-        // await findResult.forEach(console.dir);
-        await findResult.forEach(doc => console.log(doc));
+        // await findResult.forEach(doc => console.log(doc));
+
+        const allValues = await findResult.toArray();
+        console.log(`${allValues.length} movies found those released in 1953  `)
+
+        const documentCount = await findResult.counts();
+        console.log(documentCount)
+
     } finally {
         await client.close()
     }
