@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const indexRouter = require('./src/indexRouter')
 
 // parse req body 
 app.use(express.json());
@@ -7,12 +8,7 @@ app.use(express.urlencoded({
   extended : false
 }))
 
-app.use('/',(req,res,next)=>{
-  res.status(200).json({
-    app : "customerAPI",
-    version: "1.0.1"
-  })
-})
+app.use('/',indexRouter)
 
 app.use('/*', (req,res,next)=>{
     res.status(404).json({
