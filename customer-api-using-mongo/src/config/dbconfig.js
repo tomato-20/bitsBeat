@@ -1,18 +1,20 @@
 const {MongoClient} = require('mongodb');
-const { Cursor } = require('mongoose');
 require('dotenv').config();
 
-const db_user = process.env.DB_USER;
+const db_user = process.env.DB_USERNAME;
 const db_password = process.env.DB_PASSWORD;
 
-const url = `mongodb+srv://astrea:${db_password}@customer011.m6iec.mongodb.net/customerAPI?retryWrites=true&w=majority`;
+const url = `mongodb+srv://${db_user}:${db_password}@customer011.m6iec.mongodb.net/customerAPI?retryWrites=true&w=majority`;
 
+// create a client
 const client = new MongoClient(url);
 
-const run = async () => {
+const connect = async () => {
     try {
         await client.connect();
         const database = client.db('sample_mflix');
+        const collections =  await database.collections();
+        // collections.forEach(collection=>{console.log(collection)})
         const movies = database.collection('movies');
 
         //Query movie that has title "Titanic"
@@ -25,15 +27,23 @@ const run = async () => {
         // await findResult.forEach(doc => console.log(doc));
 
         const allValues = await findResult.toArray();
-        console.log(`${allValues.length} movies found those released in 1953  `)
+        // console.log(`${allValues.length} movies found those released in 1953  , `, allValues);
 
-        const documentCount = await findResult.counts();
-        console.log(documentCount)
+        while(await findResult.hasNext()){
+            console.log(await findResult.next())
+        }
 
-    } finally {
+        // const documentCount = await findResult.counts();
+        // console.log(documentCount)
+
+    } catch(err) {
+        console.log(err);
+    } 
+    finally {
         await client.close()
     }
 }
 
-run().catch(console.dir)
+connect()
+
 
