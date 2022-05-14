@@ -11,9 +11,9 @@ const authenticate = (req,res,next) => {
 
 router.post('/create',userController.create_user);
 
-router.get('/:id',authenticate,userController.get_user_details);
+router.post('/:id',authenticate,userController.get_user_details);
 
-router.post('/edit',authenticate,userController.update_user_details);
+router.put('/edit',authenticate,userController.update_user_details);
 
 router.delete('/delete',authenticate,userController.delete_user)
 

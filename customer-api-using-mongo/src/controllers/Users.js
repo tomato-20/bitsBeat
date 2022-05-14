@@ -1,24 +1,40 @@
+const userServices = require('../services/Users')
 
 // create user
 exports.create_user = (req,res,next) => {
-    // createUserService(email,params)
-    res.send('NOT IMPLEMENTED create user details')
+    userServices.createUser(req.body)
+    .then(data => {
+        res.json({
+            data ,
+            msg: 'User created successfully!'
+        })
+    })
+    .catch(error=>{next(error)})
 }
 
 // get user details
 exports.get_user_details = (req,res,next) => {
-    // getUserService(userId, email)
-    res.send('NOT IMPLEMENTED GET user details')
+    userServices.getUserDetailById(req.params.id)
+    .then(data=>{
+        res.json({
+            data
+        })
+    }).catch((error)=>{next(error)})
 }
 
 // delete user
 exports.delete_user = (req,res,next) => {
-    // deleteUserService(userId, email)
-    res.send('NOT IMPLEMENTED delete user details')
+    userServices.deleteUserById(req.body.id)
+    .then(data => {
+        res.json(data)
+    }).catch(error => {next(error)})
 }
 
 // update user
 exports.update_user_details = (req,res,next) => {
-    // updateUserService(userId,updateParams)
-    res.send('NOT IMPLEMENTED update user details')
+    const  {id, ...payload} = req.body;
+    userServices.updateUserById(id, payload)
+    .then(data=>{
+        res.json(data)
+    })
 }

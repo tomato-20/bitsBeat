@@ -41,7 +41,8 @@ const UserSchema = new Schema({
         type : String,
     },
     deleted: {
-        type: Boolean
+        type: Boolean,
+        default: false
     } 
 },{timestamps: {
     createdAt : 'created_at',

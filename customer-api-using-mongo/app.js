@@ -13,7 +13,6 @@ app.use(express.urlencoded({
 }))
 
 // db connection
-console.log(process.env.DB_CONNECTION)
 mongoose.connect(process.env.DB_CONNECTION, {
   useNewUrlParser : true
 },()=>{
@@ -26,6 +25,13 @@ app.use('/*', (req,res,next)=>{
     res.status(404).json({
         msg: `Cannot ${req.method} ${req.url}}`
     })
+})
+
+app.use((err,req,res, next) => {
+  res.status(500).json({
+    error : "Internal server error",
+    msg: err.message || err.msg
+  })
 })
 
 module.exports = app;
