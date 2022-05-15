@@ -1,13 +1,6 @@
 const router = require('express').Router();
 const userController = require('../controllers/Users')
-
-const authenticate = (req,res,next) => {
-    try {
-        next()
-    } catch (error) {
-        next(error)
-    }    
-}
+const authenticate = require('../helper/authmiddlewere')
 
 router.post('/create',userController.create_user);
 

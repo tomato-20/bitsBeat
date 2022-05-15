@@ -26,7 +26,7 @@ exports.hash = async (password) => {
 exports.compare = async (password,hash) => {
     try {
         const result = await bcrypt.compare(password,hash);
-        console.log(result)
+        return result;
     } catch (error) {
         throw new Error ('Compare Password went wrong')
     }

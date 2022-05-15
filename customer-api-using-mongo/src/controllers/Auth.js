@@ -1,7 +1,11 @@
+const authController = require('../services/Auth')
 
 // login user 
 exports.login_user = (req,res,next) => {
-    res.send('NOT IMPLEMENTED LOGIN')
+    const {email , password} = req.body
+    authController.login(email,password)
+    .then(data=> {res.json(data)})
+    .catch(err => {next(err)})
 }
 
 // logout user

@@ -1,37 +1,11 @@
 const {default : mongoose} = require('mongoose')
 const Users = require('../models/Users');
+
 const logger = require('../utils/loggor')
 const crypt = require('../utils/bcrypt');
-const { updateOne } = require('../models/Users');
-const { hash } = require('bcrypt');
+const {getUserByEmail, getUserByID} = require('./SearchUser')
 
-/**
- * 
- * @param {String} email 
- * @returns user if found
- */
-exports.getUserByEmail = async (email) => {
-    try {
-        const user = await Users.findOne({ email , deleted: false})
-        return user
-    } catch (error) {
-        throw error
-    }
-}
 
-/**
- * 
- * @param {string} id 
- * @returns 
- */
-exports.getUserByID = async (id) => {
-    try {
-        let user = await Users.findById(id)
-        return user.deleted ? null : user;
-    } catch (error) {
-        throw error
-    }
-}
 
 
 /**
@@ -47,7 +21,7 @@ exports.createUser = async (payload) => {
 
     try {
         // check if user already existed
-        const userExist = await this.getUserByEmail(payload.email)
+        const userExist = await getUserByEmail(payload.email)
         if (!!userExist) {
             logger.error('user already exist');
             throw new Error('User already exist');
@@ -84,7 +58,7 @@ exports.createUser = async (payload) => {
  */
 exports.getUserDetailById = async (id) => {
     try { 
-        const user = await this.getUserByID(id); 
+        const user = await getUserByID(id); 
         if (!user) {
             throw new Error('User not found')
         };
@@ -106,7 +80,7 @@ exports.getUserDetailById = async (id) => {
 exports.updateUserById =  async (id,payload) => {
     let update  = {};
    try{
-    const user = await this.getUserByID(id);
+    const user = await getUserByID(id);
     if(!user) throw new Error('User not found');
     
     update = {
@@ -135,8 +109,9 @@ exports.updateUserById =  async (id,payload) => {
  */
 exports.deleteUserById = async (id) => {
     try {
-        const userExist = await this.getUserByID(id);
+        const userExist = await getUserByID(id);
         if(!userExist) throw new Error ('User does not exits');
+       
         await Users.findOneAndUpdate({_id : id},{deleted: true});
         return {
             msg: `User successfully deleted`
