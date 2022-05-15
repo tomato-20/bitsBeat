@@ -28,17 +28,8 @@ const UserSchema = new Schema({
         required: true,
         minlength: 3
     },
-    created_by : {
-        type: String, 
-    },
-    updated_by : {
-        type: String,
-    },
     deleted_at: {
         type : Date,
-    },
-    deleted_by: {
-        type : String,
     },
     deleted: {
         type: Boolean,

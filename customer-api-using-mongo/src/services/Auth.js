@@ -3,6 +3,7 @@ const User = require('../models/Users')
 const {generateAccessToken} = require('../utils/jwtauthentication')
 const {compare} = require('../utils/bcrypt')
 const {getUserByEmail} = require('./SearchUser') 
+const Sessions = require('../models/Sessions')
 
 exports.login = async (email,password) => {
     // input validation
@@ -12,19 +13,37 @@ exports.login = async (email,password) => {
     try {
         const existedUser = await getUserByEmail(email);
         if(existedUser) {
-            console.log(existedUser.password)
              isPasswordValid = await compare(password,existedUser.password);
-             console.log(isPasswordValid)
         }
         if(!existedUser || !isPasswordValid) throw new Error('Invalid email or password');
-
+        
+        // generate token for valid user
         const token = await generateAccessToken({
             username: existedUser.username,
             id: existedUser._id
         });
-        
+
+         // check if there is session for user
+        const user = await Sessions.findOne({user_id: existedUser._id}).lean();
+
+        let session = null;
+        if(user == null) {
+            session = new Sessions({
+                user_id : existedUser._id,
+                token,
+                is_valid: true
+            })
+    
+            await session.save(); 
+        } else if (user.is_valid == false){
+            session = await Sessions.findOneAndUpdate({user_id: existedUser._id},{is_valid: true, token: token})
+        } else{
+            return {
+                msg: 'User already logged in '
+            }
+        }
         return {
-            token
+            token: token
         }
     } catch (error) {
         throw (error)
@@ -33,9 +52,17 @@ exports.login = async (email,password) => {
 
 exports.logout = async (id) => {
     try {
-        // check if session is active
-        // - token is valid or not 
-        // - check if token is expired
+        const session = await Sessions.findOne({user_id: id}).lean();
+        // if there is no session for user
+        if(!session || !session.is_valid){
+            throw new Error('User not logged in!');
+        }
+
+        await Sessions.findOneAndUpdate({user_id: id},{is_valid: false})
+
+        return {
+            msg: "User logged out successfully!"
+        }
 
     } catch (error) {
         throw (error)

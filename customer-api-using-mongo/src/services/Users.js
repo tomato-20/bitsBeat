@@ -112,7 +112,7 @@ exports.deleteUserById = async (id) => {
         const userExist = await getUserByID(id);
         if(!userExist) throw new Error ('User does not exits');
        
-        await Users.findOneAndUpdate({_id : id},{deleted: true});
+        await Users.findOneAndUpdate({_id : id},{deleted: true, deleted_at: Date.now()});
         return {
             msg: `User successfully deleted`
         }

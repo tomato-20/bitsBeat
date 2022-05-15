@@ -10,4 +10,6 @@ router.put('/edit',authenticate,userController.update_user_details);
 
 router.delete('/delete',authenticate,userController.delete_user)
 
+
+
 module.exports  = router;

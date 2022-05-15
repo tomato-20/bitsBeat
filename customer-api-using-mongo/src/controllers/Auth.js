@@ -10,6 +10,9 @@ exports.login_user = (req,res,next) => {
 
 // logout user
 exports.logout_user = (req,res,next) => {
-    res.send('NOT IMPLEMENTED logout')
+    authController.logout(req.user.id)
+    .then(data=>{res.json(data)})
+    .catch(error=>{next(error)})
+    // res.send('NOT IMPLEMENTED logout')
 }
 
