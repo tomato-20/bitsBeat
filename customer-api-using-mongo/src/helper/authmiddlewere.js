@@ -1,5 +1,6 @@
 const logger = require("../utils/loggor")
 const jwtauthentication = require('../utils/jwtauthentication')
+// const sessions = require('../services/')
 
 const authenticate = (req,res,next) => {
     try {
@@ -10,6 +11,7 @@ const authenticate = (req,res,next) => {
         const decoded = jwtauthentication.verifyToken(token);
         if(decoded == null) throw new Error ('Unauthorized acess! Invalid token');
 
+        
         req.user = decoded;
         next()
     } catch (error) {

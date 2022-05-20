@@ -2,7 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const indexRouter = require('./src/indexRouter')
+const logger = require('./src/utils/loggor');
+const connection = require('./src/config/dbconfig')
+const indexRouter = require('./src/indexRouter');
 
 const app = express();
 
@@ -13,24 +15,29 @@ app.use(express.urlencoded({
 }))
 
 // db connection
-mongoose.connect(process.env.DB_CONNECTION, {
-  useNewUrlParser : true
-},()=>{
-  console.log('connected to db')
+connection();
+
+
+// logging request
+app.use((req,res,next)=>{
+  console.log(`${req.method} ${req.url}`)
+  next();
 })
 
-app.use('/',indexRouter)
+app.use('/api',indexRouter)
 
+// 404 error
 app.use('/*', (req,res,next)=>{
     res.status(404).json({
-        msg: `Cannot ${req.method} ${req.url}}`
+        msg: `Cannot ${req.method} ${req.url}. Not found`
     })
 })
 
+// error handles
 app.use((err,req,res, next) => {
-  res.status(500).json({
-    error : "Internal server error",
-    msg: err.message || err.msg
+  if(!err.status) console.error(err.stack)
+  res.status(err.status || 500).json({
+    msg: err.message || err.msg || 'Internal Server Error'
   })
 })
 

@@ -1,6 +1,6 @@
 const {Schema, default: mongoose} = require('mongoose');
 const {v4 : uuidv4} = require('uuid') 
-
+const crypt = require('../utils/bcrypt')
 
 let validateEmail = (email) => {
     var re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -40,4 +40,12 @@ const UserSchema = new Schema({
     updatedAt : 'updated_at'
 }});
 
+UserSchema.pre('save',async function (next){
+    if(!this.isModified('password')) {
+        return next()
+    }
+    const hash = await crypt.hash(this.password);
+    this.password = hash;
+    next();
+})
 module.exports = mongoose.model('Users',UserSchema);

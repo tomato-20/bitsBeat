@@ -2,8 +2,8 @@ const {default : mongoose} = require('mongoose')
 const Users = require('../models/Users');
 
 const logger = require('../utils/loggor')
-const crypt = require('../utils/bcrypt');
-const {getUserByEmail, getUserByID} = require('./SearchUser')
+const {getUserByEmail, getUserByID} = require('./SearchUser');
+const { Unauthorized, BadRequest } = require('../utils/errors/errors');
 
 
 
@@ -24,15 +24,13 @@ exports.createUser = async (payload) => {
         const userExist = await getUserByEmail(payload.email)
         if (!!userExist) {
             logger.error('user already exist');
-            throw new Error('User already exist');
+            throw new BadRequest('User already exist');
         }
 
         // hash the password 
-        const hash = await crypt.hash(payload.password);
         userData = {
             ...payload,
             ...userData,
-            password: hash,
         }
 
         // save new user to database
@@ -60,7 +58,7 @@ exports.getUserDetailById = async (id) => {
     try { 
         const user = await getUserByID(id); 
         if (!user) {
-            throw new Error('User not found')
+            throw new Unauthorized('User not found')
         };
         user.password = undefined,
         user.uuid = undefined
@@ -78,21 +76,13 @@ exports.getUserDetailById = async (id) => {
  * @returns 
  */
 exports.updateUserById =  async (id,payload) => {
-    let update  = {};
+
    try{
     const user = await getUserByID(id);
-    if(!user) throw new Error('User not found');
+    if(!user) throw new Unauthorized('User not found');
     
-    update = {
-        ...payload
-    }
 
-    if(payload.password) {
-        hash = await crypt.hash(payload.password);
-        update.password = hash
-    }
-
-    await Users.findOneAndUpdate({_id: id},update);
+    await Users.findOneAndUpdate({_id: id},payload);
 
     return {
         msg : "User Update Successful!"
@@ -110,7 +100,7 @@ exports.updateUserById =  async (id,payload) => {
 exports.deleteUserById = async (id) => {
     try {
         const userExist = await getUserByID(id);
-        if(!userExist) throw new Error ('User does not exits');
+        if(!userExist) throw new Unauthorized ('User does not exits');
        
         await Users.findOneAndUpdate({_id : id},{deleted: true, deleted_at: Date.now()});
         return {
