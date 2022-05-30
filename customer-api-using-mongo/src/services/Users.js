@@ -1,12 +1,14 @@
-const {default : mongoose} = require('mongoose')
-const Users = require('../models/Users');
+require('dotenv').config()
+const crypto = require('crypto')
+const {Users,Sessions,ConfirmationCode} = require('../models')
 
 const logger = require('../utils/loggor')
-const {getUserByEmail, getUserByID} = require('./SearchUser');
-const { Unauthorized, BadRequest } = require('../utils/errors/errors');
+const crypt = require('../utils/bcrypt')
+const sendMail = require('../helper/sendMail/sendGrid')
+const {getUserByEmail, getUserByID} = require('./SearchUser')
+const { Unauthorized, BadRequest } = require('../utils/errors/errors')
 
-
-
+const baseURL = process.env.BASE_URL
 
 /**
  * Create a new user
@@ -37,10 +39,31 @@ exports.createUser = async (payload) => {
         const user = new Users(userData);
         await user.save()
 
+        // create confirmation code and save to db
+        const conformationcode = crypto.randomBytes(32).toString('hex');
+        const code = new ConfirmationCode({user_id: user.id, code: conformationcode})
+        await code.save();
+        
+        let confirmUrl = `${baseURL}/auth/confirm/${conformationcode}/${user.uuid}`
+
+        // send verification mail
+        const response = await sendMail({
+            email: user.email,
+            subject: 'Please verify your email',
+            content: `<p>Thank you for choosing our app!</p>
+            <p> please click the following link to verify your mail</p>
+            <a href="${confirmUrl}">Verify email</a>
+            <p>If you did not register the email ignore the link</p>
+            `
+        })
+
         // return the responst
         return {
-            userName: user.username,
-            id: user.id
+            message: 'Check your mail to verify the account!',
+            data: {
+                userName: user.username,
+                id: user.id,
+            }
         }
 
     } catch (error) {
@@ -103,6 +126,7 @@ exports.deleteUserById = async (id) => {
         if(!userExist) throw new Unauthorized ('User does not exits');
        
         await Users.findOneAndUpdate({_id : id},{deleted: true, deleted_at: Date.now()});
+
         return {
             msg: `User successfully deleted`
         }
@@ -111,3 +135,37 @@ exports.deleteUserById = async (id) => {
     }
     
 }
+
+/**
+ * 
+ * @param {String} id 
+ * @param {String} oldPassword 
+ * @param {String} newPassword 
+ * @returns Object {message : <String>}
+ */
+exports.changeUserPassword = async (id, oldPassword, newPassword) => {
+    try{
+        const existUser = await getUserByID(id);
+        if(!existUser) throw new BadRequest('Cannot get user!')
+        
+        // compare the previous password
+        if(! await crypt.compare(oldPassword,existUser.password)) throw new Unauthorized('Old password does not match');
+
+        // new password cannot be old password
+        if( await crypt.compare(newPassword,existUser.password)) throw new BadRequest('New password cannot be old password');
+
+        // replace the old password
+        const newPasswordHash = await crypt.hash(newPassword)
+        await Users.findOneAndUpdate({_id: id},{password: newPasswordHash})
+
+        // TODO : logout user 
+        await Sessions.findOneAndUpdate({user_id: id},{is_valid: false})
+
+        return {
+            message: "Password change successful!"
+        }
+
+    }catch(error) {
+        throw (error)
+    }
+} 

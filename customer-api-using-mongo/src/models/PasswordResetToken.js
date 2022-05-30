@@ -1,7 +1,7 @@
 const mongoose  = require('mongoose');
 const crypt = require('../utils/bcrypt')
 
-const EXPIRY_TIME_SEC = 5*60; // expires in 5 min
+let EXPIRY_TIME_SEC = 5*60; // expires in 5 min
 
 const resetPasswordSchema = new mongoose.Schema({
   user_id : {
@@ -16,7 +16,7 @@ const resetPasswordSchema = new mongoose.Schema({
   created_at : {
     type: Date,
     default: Date.now,
-    expires: 60
+    expires: EXPIRY_TIME_SEC
   },
   expires_at : {
     type: Date

@@ -28,7 +28,6 @@ const sendMail = async (message) => {
 
         // send mail
         const mailResponse = await sgMail.send(msg);
-        console.log(mailResponse)
         return {
             success: true,
             content: mailResponse[0]

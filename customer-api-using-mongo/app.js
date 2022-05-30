@@ -37,7 +37,7 @@ app.use('/*', (req,res,next)=>{
 app.use((err,req,res, next) => {
   if(!err.status) console.error(err.stack)
   res.status(err.status || 500).json({
-    msg: err.message || err.msg || 'Internal Server Error'
+    message: err.message || err.msg || 'Internal Server Error'
   })
 })
 

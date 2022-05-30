@@ -1,6 +1,7 @@
 const {Schema, default: mongoose} = require('mongoose');
 const {v4 : uuidv4} = require('uuid') 
 const crypt = require('../utils/bcrypt')
+const roles = require('../helper/constants/roles')
 
 let validateEmail = (email) => {
     var re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -20,13 +21,21 @@ const UserSchema = new Schema({
     email: {
         type: String,
         required: true,
-        validate: [validateEmail, 'Please fill a valid email address'],
-        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
     password: {
         type: String,
         required: true,
-        minlength: 3
+        minlength: 5
+    },
+    role : {
+        type: String,
+        enum: Object.values(roles),
+        default: roles.User,
+    },
+    status: {
+        type: String,
+        enum:['pending','active'],
+        default: 'pending'
     },
     deleted_at: {
         type : Date,
@@ -48,4 +57,5 @@ UserSchema.pre('save',async function (next){
     this.password = hash;
     next();
 })
+
 module.exports = mongoose.model('Users',UserSchema);

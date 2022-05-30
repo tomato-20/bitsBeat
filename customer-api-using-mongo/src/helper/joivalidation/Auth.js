@@ -7,6 +7,11 @@ const loginSchema = Joi.object().keys({
     presence: "required"
 })
 
+const refreshTokenSchema = Joi.object().keys({
+    refreshToken : Joi.string().required(),
+    accessToken : Joi.string().required()
+})
+
 exports.validateUserLogin = async(req,res,next) => {
     try {
         const value = loginSchema.validate(req.body);
@@ -15,6 +20,18 @@ exports.validateUserLogin = async(req,res,next) => {
         }
         next();
     } catch (error) {
+        next(error)
+    }
+}
+
+exports.validateRefreshToken = async(req,res,next) => {
+    try {
+        const value = refreshTokenSchema.validate(req.body);
+        if(value.error) {
+            throw(value.error.details[0].message)
+        }
+        next();
+    } catch (error) {  
         next(error)
     }
 }

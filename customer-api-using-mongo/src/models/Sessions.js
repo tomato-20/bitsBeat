@@ -16,6 +16,9 @@ const SessionSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    expires_at : {
+        type: Date
     }
 },{
     timestamps:{

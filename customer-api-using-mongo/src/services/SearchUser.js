@@ -21,7 +21,8 @@ const Users = require('../models/Users');
  */
 exports.getUserByID = async (id) => {
     try {
-        let user = await Users.findById(id)
+        let user = await Users.findById(id).lean()
+        if(!user) return null
         return user.deleted ? null : user;
     } catch (error) {
         throw error
