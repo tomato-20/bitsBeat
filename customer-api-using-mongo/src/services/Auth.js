@@ -1,11 +1,12 @@
 const { default: mongoose } = require('mongoose')
 
-const {Users,Sessions, ConfirmationCode, refreshToken, RefreshToken} = require('../models')
-
-const {generateAccessToken, genereateRefreshToken, verifyToken} = require('../utils/jwtauthentication')
 const {compare} = require('../utils/bcrypt')
+const {dateNow} = require('../utils/time')
+const {accessTokenExpiracy} = require('../helper/constants/expiracyTime')
 const {getUserByEmail} = require('./SearchUser') 
 const { BadRequest, Unauthorized } = require('../utils/errors/errors')
+const {Users,Sessions, ConfirmationCode, RefreshToken} = require('../models')
+const {generateAccessToken, genereateRefreshToken, verifyToken} = require('../utils/jwtauthentication')
 
 /**
  * 
@@ -32,7 +33,7 @@ exports.login = async (email,password) => {
         const token =  generateAccessToken(payload);
 
          // check if there is session for user
-        let session = await Sessions.findOne({user_id: existedUser._id}).lean();
+        let session = await Sessions.findOne({user_id: existedUser._id});
 
         if(session == null) {
             session = new Sessions({
@@ -42,8 +43,9 @@ exports.login = async (email,password) => {
             })
     
             await session.save(); 
-        } else if (session.is_valid == false){
-            session = await Sessions.findOneAndUpdate({user_id: existedUser._id},{is_valid: true, token: token})
+        } else if (session.is_valid == false || session?.expires_at <= Date.now()){
+            const expires_at = dateNow.addSeconds(accessTokenExpiracy);
+            session = await Sessions.findOneAndUpdate({user_id: existedUser._id},{is_valid: true, token: token, expires_at})
         } else{
             return {
                 msg: 'User already logged in '
@@ -51,8 +53,11 @@ exports.login = async (email,password) => {
         }
 
         // find refresh token 
-        let refreshToken = await RefreshToken.findOne({user_id: existedUser._id, status: 'active'});
-        if(!refreshToken) {
+        let refreshToken = await RefreshToken.findOne({user_id: existedUser._id, status: 'active', revoked: false});
+        if(!refreshToken || !(refreshToken && !refreshToken.expires_at <= new Date())) {
+            if(!!refreshToken) {
+                await RefreshToken.findOneAndUpdate({_id: refreshToken.id}, {status: 'expired'})
+            }
             let generateNewToken = genereateRefreshToken(payload);
             refreshToken = new RefreshToken({user_id: existedUser._id,status: 'active',token: generateNewToken});  
             await refreshToken.save()  
@@ -77,7 +82,7 @@ exports.logout = async (id) => {
     try {
         const session = await Sessions.findOne({user_id: id}).lean();
         // if there is no session for user
-        if(!session || !session.is_valid){
+        if(!session || !session.is_valid || session?.expires_at <= new Date()){
             throw new BadRequest('User not logged in!');
         }
 
@@ -142,5 +147,31 @@ exports.refreshToken = async (refreshToken , accessToken) => {
     }
     }catch(error) {
         throw(error)
+    }
+}
+
+/**
+ * 
+ * @param {String} refreshToken 
+ * @param {Object.Types.id} user_id 
+ * @returns 
+ */
+exports.revokeRefreshToken = async (refreshToken, user_id) => {
+    let date = new Date();
+    let updateData = {
+        revoked: true,
+        revoked_at: date,
+        status : 'revoked'
+    }
+    try {  
+        const oldTokeModel = await RefreshToken.findOne({token: refreshToken, user_id})
+        if(!oldTokeModel) throw new BadRequest('Refresh token not valid')
+        await RefreshToken.findOneAndUpdate({id: oldTokeModel.id}, {...updateData} )
+        return {
+            success: true,
+            message: "Token revoked"
+        }
+    } catch (error) {
+        throw error
     }
 }

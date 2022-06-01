@@ -8,13 +8,13 @@ const {validateCreateUser, validateUserUpdate, validateChangePassword} = require
 
 router.post('/create', validateCreateUser, userController.create_user);
 
-router.post('/:id',authenticate,userController.get_user_details);
+router.get('/',authenticate,userController.get_user_details);
 
-router.post('/edit',validateUserUpdate, authenticate,userController.update_user_details);
+router.post('/',validateUserUpdate, authenticate,userController.update_user_details);
 
-router.delete('/delete',authenticate,userController.delete_user)
+router.delete('/',authenticate,userController.delete_user)
 
-router.put('/change_password',validateChangePassword,authenticate,userController.change_password)
+router.put('/change-password',validateChangePassword,authenticate,userController.change_password)
 
 
 router.use('/',(req,res,next)=>{

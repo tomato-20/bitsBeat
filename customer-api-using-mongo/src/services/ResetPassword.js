@@ -2,12 +2,11 @@ require('dotenv').config();
 const crypto = require('crypto');
 const BASE_URL = process.env.BASE_URL;
 
-const Users = require('../models/Users')
-const ResetToken = require('../models/PasswordResetToken')
+
 const crypt = require('../utils/bcrypt')
-const {BadRequest, Unauthorized} = require('../utils/errors/errors');
 const sendMail = require('../helper/sendMail/sendGrid');
-const Sessions = require('../models/Sessions');
+const {Users,ResetToken,Sessions} = require('../models')
+const {BadRequest, Unauthorized} = require('../utils/errors/errors');
 
 exports.requestResetPassword = async (email) =>{
     let token = "this is token"
@@ -59,9 +58,9 @@ exports.resetPassword = async (userId, tokenId, newPassword) => {
     const currentDateTime = Date.now();
     try {
     // search in user table for user with uuid = userId 
-       const exitUser = await Users.findOne({uuid: userId});
+       const existUser = await Users.findOne({uuid: userId});
 
-       if(!exitUser) {
+       if(!existUser) {
            throw new Unauthorized('Invalid token');
        }
 

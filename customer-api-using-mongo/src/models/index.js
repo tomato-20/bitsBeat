@@ -3,7 +3,7 @@ mongoose.Promise = global.Promise;
 
 const Users = require('./Users')
 const Sessions = require('./Sessions')
-const PasswordResetToken = require('./Users')
+const PasswordResetToken = require('./PasswordResetToken')
 const RefreshToken = require('./RefreshToken')
 const ConfirmationCode =  require('./ConfirmationCodes')
 

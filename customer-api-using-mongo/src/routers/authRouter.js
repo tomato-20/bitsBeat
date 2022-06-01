@@ -12,7 +12,7 @@ router.post('/confirm/:confirmationcode/:userid', authController.verify_email)
 
 router.post('/refresh-token',validateRefreshToken,authController.refresh_token)
 
-router.post('/revoke-token')
+router.post('/revoke-token',authenticate, authController.revoke_refresh_token)
 
 // router.use('/',(req,res,next)=>{
 //     res.send('This is auth route')

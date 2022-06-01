@@ -15,7 +15,7 @@ exports.create_user = (req,res,next) => {
 
 // get user details
 exports.get_user_details = (req,res,next) => {
-    userServices.getUserDetailById(req.params.id)
+    userServices.getUserDetailById(req.user.id)
         .then(data=>{
             res.json(data)
         }).catch(error=>{
@@ -26,7 +26,7 @@ exports.get_user_details = (req,res,next) => {
 
 // delete user
 exports.delete_user = (req,res,next) => {
-    userServices.deleteUserById(req.body.id)
+    userServices.deleteUserById(req.user.id)
         .then(data => {
             res.json(data)
         }).catch(error=>{
@@ -37,8 +37,8 @@ exports.delete_user = (req,res,next) => {
 
 // update user
 exports.update_user_details = (req,res,next) => {
-    const  {id, ...payload} = req.body;
-    userServices.updateUserById(id, payload)
+    const  {...payload} = req.body;
+    userServices.updateUserById(req.user.id, payload)
         .then(data=>{
             res.json(data)
         }).catch(error=>{

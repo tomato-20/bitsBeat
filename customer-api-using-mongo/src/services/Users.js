@@ -1,11 +1,11 @@
 require('dotenv').config()
 const crypto = require('crypto')
-const {Users,Sessions,ConfirmationCode} = require('../models')
 
 const logger = require('../utils/loggor')
 const crypt = require('../utils/bcrypt')
 const sendMail = require('../helper/sendMail/sendGrid')
 const {getUserByEmail, getUserByID} = require('./SearchUser')
+const {Users,Sessions,ConfirmationCode} = require('../models')
 const { Unauthorized, BadRequest } = require('../utils/errors/errors')
 
 const baseURL = process.env.BASE_URL
@@ -160,6 +160,7 @@ exports.changeUserPassword = async (id, oldPassword, newPassword) => {
 
         // TODO : logout user 
         await Sessions.findOneAndUpdate({user_id: id},{is_valid: false})
+
 
         return {
             message: "Password change successful!"

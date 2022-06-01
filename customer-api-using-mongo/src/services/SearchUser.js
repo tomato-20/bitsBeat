@@ -1,5 +1,5 @@
 
-const Users = require('../models/Users');
+const {Users} = require('../models');
 /**
  * 
  * @param {String} email 

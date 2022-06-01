@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
+const {dateNow} = require('../utils/time')
+
 
 let EXPIRY_TIME_SEC =   24 * 60 * 60; //expires in one day
-// let EXPIRY_TIME_SEC =   60; //expires in a minute
 
 const ConfirmationCodeSchema = new mongoose.Schema({
     user_id :{
@@ -25,9 +26,7 @@ const ConfirmationCodeSchema = new mongoose.Schema({
 
 ConfirmationCodeSchema.pre('save', async function(next) {
     // set the expiry date to +5 min of token creation
-    let date = new Date();
-    date.setSeconds(date.getSeconds() + parseInt(EXPIRY_TIME_SEC));
-    this.expires_at = date;
+    this.expires_at = dateNow.addSeconds(EXPIRY_TIME_SEC);
     next()
   })
 

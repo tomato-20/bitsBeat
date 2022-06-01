@@ -31,3 +31,10 @@ exports.refresh_token = (req,res,next) => {
         .catch(error=>next(error))
 }
 
+// revoke refresh token
+exports.revoke_refresh_token = (req,res,next) => {
+    authServices.revokeRefreshToken(req.body.refreshToken, req.user.id)
+        .then(data=>res.json(data))
+        .catch(error=>next(error))
+}
+

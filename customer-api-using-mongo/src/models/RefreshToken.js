@@ -1,5 +1,8 @@
-const { MongoMissingCredentialsError } = require('mongodb');
 const mongoose = require('mongoose');
+
+const { dateNow } = require('../utils/time');
+const {refreshTokenExpiracy} = require('../helper/constants/expiracyTime');
+
 
 const refreshTokenSchema = mongoose.Schema({
     user_id : {
@@ -13,8 +16,18 @@ const refreshTokenSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['revoked','active'],
+        enum: ['revoked','active','invalid'],
         required : true
+    },
+    revoked : {
+        type: Boolean,
+        default: false
+    },
+    revoked_at : {
+        type: Date
+    },
+    expires_at : {
+        type: Date
     }
 }, {
     timestamps: {
@@ -22,5 +35,11 @@ const refreshTokenSchema = mongoose.Schema({
         updatedAt: 'updated_at'
     }
 })
+
+refreshTokenSchema.pre('save', async function(next){
+    this.expires_at = dateNow.addSeconds(refreshTokenExpiracy);
+    next()
+})
+
 
 module.exports = mongoose.model('refresh_token',refreshTokenSchema)
