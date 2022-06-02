@@ -5,7 +5,7 @@ const BASE_URL = process.env.BASE_URL;
 
 const crypt = require('../utils/bcrypt')
 const sendMail = require('../helper/sendMail/sendGrid');
-const {Users,ResetToken,Sessions} = require('../models')
+const {Users,PasswordResetToken: ResetToken,Sessions} = require('../models')
 const {BadRequest, Unauthorized} = require('../utils/errors/errors');
 
 exports.requestResetPassword = async (email) =>{
@@ -28,10 +28,11 @@ exports.requestResetPassword = async (email) =>{
         const newTokenDoc =await new ResetToken({
             user_id : existUser._id,
             token
-        }).save()   
+        })
+        newTokenDoc.save()   
 
         // create an reset pass link to the user 
-        const resetUrl = `${BASE_URL}/password_reset/${existUser.uuid}/${token}`
+        const resetUrl = `${BASE_URL}/auth/reset-password/${existUser.uuid}/${token}`
 
         const response = await sendMail({
             email: existUser.email,
@@ -43,10 +44,12 @@ exports.requestResetPassword = async (email) =>{
         })
 
         // logout user
-        await Sessions.deleteOne({user_id: existUser._id})
+        await Sessions.findOneAndDelete({user_id: existUser._id})
 
         return  {
-            message: 'Mail sent success!'
+            success: true,
+            message: 'Mail sent!',
+            resetUrl
         }
     } catch ( error) {
         throw(error)
@@ -66,7 +69,7 @@ exports.resetPassword = async (userId, tokenId, newPassword) => {
 
     // get hashed token from reset token table for user._id 
        
-       const foundToken = await ResetToken.findOne({user_id: exitUser._id});
+       const foundToken = await ResetToken.findOne({user_id: existUser._id});
        
        if(!foundToken) {
            throw new BadRequest('Invalid token');
@@ -79,7 +82,7 @@ exports.resetPassword = async (userId, tokenId, newPassword) => {
             throw new BadRequest('Token is invalid or expired!');
         }
 
-        await Users.findOneAndUpdate({uuid: userId}, {newPassword});
+        let user = await Users.findOneAndUpdate({uuid: userId}, {password: await crypt.hash(newPassword)})
 
         await ResetToken.deleteOne({user_id: existUser._id});
 

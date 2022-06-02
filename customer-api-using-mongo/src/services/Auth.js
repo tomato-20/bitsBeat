@@ -2,6 +2,7 @@ const { default: mongoose } = require('mongoose')
 
 const {compare} = require('../utils/bcrypt')
 const {dateNow} = require('../utils/time')
+const sendMail = require('../helper/sendMail/sendGrid')
 const {accessTokenExpiracy} = require('../helper/constants/expiracyTime')
 const {getUserByEmail} = require('./SearchUser') 
 const { BadRequest, Unauthorized } = require('../utils/errors/errors')
@@ -18,7 +19,7 @@ exports.login = async (email,password) => {
 
     let isPasswordValid = false;
     try {
-        const existedUser = await getUserByEmail(email);
+        const existedUser = await Users.findOne({email, deleted: false});
         if(existedUser) {
              isPasswordValid = await compare(password,existedUser.password);
         }
@@ -48,7 +49,7 @@ exports.login = async (email,password) => {
             session = await Sessions.findOneAndUpdate({user_id: existedUser._id},{is_valid: true, token: token, expires_at})
         } else{
             return {
-                msg: 'User already logged in '
+                message: 'User already logged in '
             }
         }
 
@@ -89,7 +90,8 @@ exports.logout = async (id) => {
         await Sessions.findOneAndUpdate({user_id: id},{is_valid: false})
 
         return {
-            msg: "User logged out successfully!"
+            success: true,
+            message: "User logged out successfully!"
         }
 
     } catch (error) {
@@ -103,7 +105,6 @@ exports.logout = async (id) => {
  * @param {mongoose.Types.ObjectId} userid 
  */
 exports.verifyEmail = async (confimationcode, userid) => {
-    const dateNow = new Date();
    try {
     // find user with userid
     const existUser = await Users.findOne({uuid: userid}).lean();
@@ -111,7 +112,7 @@ exports.verifyEmail = async (confimationcode, userid) => {
     
     // check code validation
     const validCode = await ConfirmationCode.findOne({user_id: existUser._id, code : confimationcode})
-    if(validCode?.expires_at<dateNow) {
+    if(validCode?.expires_at<=new Date()) {
         // delete the confirmation code
         await ConfirmationCode.deleteOne({_id: validCode._id})
         throw new Unauthorized('Confirmation token has expired')
@@ -130,12 +131,52 @@ exports.verifyEmail = async (confimationcode, userid) => {
 
 /**
  * 
+ * @param {mongoose.Types.ObjectId} user_id 
+ */
+exports.resendToken = async (user_id) => {
+    try {
+        let existUser = await Users.find({_id: user_id})
+        if(!existUser) throw new BadRequest('User does not exist!')
+        if(existUser.status == 'active') return {message: 'Email is verified!'} 
+
+        await ConfirmationCode.findOneAndDelete({user_id})
+
+        // create confirmation code and save to db
+        const conformationcode = crypto.randomBytes(32).toString('hex');
+        const code = new ConfirmationCode({user_id: existUser.id, code: conformationcode})
+        await code.save();
+        
+        let confirmUrl = `${baseURL}/auth/confirm/${conformationcode}/${existUser.uuid}`
+
+        // send verification mail
+        const response = await sendMail({
+            email: existUser.email,
+            subject: 'Please verify your email',
+            content: `<p>Thank you for choosing our app!</p>
+            <p> please click the following link to verify your mail</p>
+            <a href="${confirmUrl}">Verify email</a>
+            <p>If you did not register the email ignore the link</p>
+            `
+        })
+        return response;
+    } catch (error) {
+        throw (error)
+    }
+}
+
+/**
+ * 
  * @param {String} refreshToken 
  * @param {String} accessToken 
  */
 exports.refreshToken = async (refreshToken , accessToken) => {
     try{
         let decoded = verifyToken(refreshToken);
+        const existRefreshToken = await RefreshToken.findOne({user_id : decoded.id, token: refreshToken, status: 'active'})
+        if(!existRefreshToken) throw new Unauthorized('Invalid Refresh Token!')
+        let existToken = await Sessions.findOne({user_id: decoded.id, token: accessToken})
+        if(!existToken) throw new Unauthorized('Refresh token and access token does not refer to same user')
+
         let {iat,exp,...payload} = decoded;
         const newAccessToken = generateAccessToken(payload);
 

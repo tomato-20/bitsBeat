@@ -23,10 +23,17 @@ exports.verify_email = (req,res,next) => {
         .catch(error => next(error))
     }
 
+// resend confirmation code
+exports.resend_email_verification_token = (req,res,next) => {
+    authServices.resendToken(req.user.id)
+        .then(data => res.json(data))
+        .catch(error => next(error))
+}
+
 // refresh token
 exports.refresh_token = (req,res,next) => {
-    const {refreshToken, accessToken} = req.body
-    authServices.refreshToken(refreshToken,accessToken)
+    const {refreshToken, oldAccessToken} = req.body
+    authServices.refreshToken(refreshToken,accessToken = oldAccessToken)
         .then(data=>res.json(data))
         .catch(error=>next(error))
 }

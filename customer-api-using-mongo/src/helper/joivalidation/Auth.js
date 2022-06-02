@@ -9,7 +9,7 @@ const loginSchema = Joi.object().keys({
 
 const refreshTokenSchema = Joi.object().keys({
     refreshToken : Joi.string().required(),
-    accessToken : Joi.string().required()
+    oldAccessToken : Joi.string().required()
 })
 
 exports.validateUserLogin = async(req,res,next) => {

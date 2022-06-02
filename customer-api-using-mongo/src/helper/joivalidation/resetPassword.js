@@ -5,7 +5,7 @@ const requestResetPasswordSchema = Joi.object().keys({
 }).required()
 
 const resetPasswordSchema = Joi.object({
-    password : Joi.string().not(null).min(4).required()
+    password : Joi.string().not(null).min(8).required()
 })
 
 exports.validatePasswordResetRequest = async (req,res,next) => {

@@ -1,11 +1,10 @@
 const Joi = require('joi');
-const { changeUserPassword } = require('../../services/Users');
 const { BadRequest } = require('../../utils/errors/errors');
 
 const UserRegistrationSchema = Joi.object({
     username: Joi.string().min(3).max(30).required(),
     email: Joi.string().email().required(),
-    password: Joi.string().min(8),
+    password: Joi.string().min(8).required(),
     role: Joi.string(),
 })
 

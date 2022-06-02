@@ -2,7 +2,6 @@ const logger = require("../utils/loggor")
 const jwtauthentication = require('../utils/jwtauthentication');
 const Sessions = require('../models/Sessions');
 const { Unauthorized } = require("../utils/errors/errors");
-const { dateNow } = require("../utils/time");
 // const sessions = require('../services/')
 
 const authenticate = async (req,res,next) => {
@@ -15,15 +14,14 @@ const authenticate = async (req,res,next) => {
         if(decoded == null) throw new Unauthorized ('Unauthorized access! Invalid token');
 
         const exsitSession = await Sessions.findOne({user_id: decoded.id, token, is_valid: true})
-        if(!exsitSession) throw new Unauthorized('User Logged out');
-        if(exsitSession?.expires_at <= new Date()) throw new Unauthorized('Unauthorized access! Invalid token');
+        if(!exsitSession || exsitSession?.expires_at <= new Date()) throw new Unauthorized('Unauthorized access! Token expired or invalid!');
 
         req.user = decoded;
         
-        next()
+        return next()
     } catch (error) {
         logger.error(error)
-        next(error)
+        return next(error)
     }
 }
 

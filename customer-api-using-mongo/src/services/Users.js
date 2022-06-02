@@ -5,7 +5,7 @@ const logger = require('../utils/loggor')
 const crypt = require('../utils/bcrypt')
 const sendMail = require('../helper/sendMail/sendGrid')
 const {getUserByEmail, getUserByID} = require('./SearchUser')
-const {Users,Sessions,ConfirmationCode} = require('../models')
+const {Users,Sessions,ConfirmationCode, RefreshToken} = require('../models')
 const { Unauthorized, BadRequest } = require('../utils/errors/errors')
 
 const baseURL = process.env.BASE_URL
@@ -23,7 +23,7 @@ exports.createUser = async (payload) => {
 
     try {
         // check if user already existed
-        const userExist = await getUserByEmail(payload.email)
+        const userExist = await Users.findOne({email: userData.email})
         if (!!userExist) {
             logger.error('user already exist');
             throw new BadRequest('User already exist');
@@ -60,6 +60,7 @@ exports.createUser = async (payload) => {
         // return the responst
         return {
             message: 'Check your mail to verify the account!',
+            confirmUrl,
             data: {
                 userName: user.username,
                 id: user.id,
@@ -101,14 +102,15 @@ exports.getUserDetailById = async (id) => {
 exports.updateUserById =  async (id,payload) => {
 
    try{
-    const user = await getUserByID(id);
+    const user = await Users.findById(id);
     if(!user) throw new Unauthorized('User not found');
     
 
     await Users.findOneAndUpdate({_id: id},payload);
 
     return {
-        msg : "User Update Successful!"
+        success : true,
+        message : "User Update Successful!"
     }
 
    }catch(err) {
@@ -121,14 +123,22 @@ exports.updateUserById =  async (id,payload) => {
  * @param {String} id 
  */
 exports.deleteUserById = async (id) => {
+    let currentDate = new Date()
     try {
-        const userExist = await getUserByID(id);
+        const userExist = await Users.findById(id);
         if(!userExist) throw new Unauthorized ('User does not exits');
        
-        await Users.findOneAndUpdate({_id : id},{deleted: true, deleted_at: Date.now()});
+        await Users.findOneAndUpdate({_id : id},{deleted: true, deleted_at: currentDate});
+
+        // session false
+        await Sessions.findOneAndUpdate({user_id : id}, {is_valid: false})
+
+        // revoke refresh token 
+        await RefreshToken.findOneAndUpdate({user_id: id, status: 'active'},{revoked: true, revoked_at: currentDate, status:'revoked'} )
 
         return {
-            msg: `User successfully deleted`
+           success: true,
+           message: 'User delete Successful'
         }
     } catch (error) {
         throw(error)
@@ -163,6 +173,7 @@ exports.changeUserPassword = async (id, oldPassword, newPassword) => {
 
 
         return {
+            success: true,
             message: "Password change successful!"
         }
 

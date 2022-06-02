@@ -1,8 +1,7 @@
 
 module.exports  = {
-    SuperAdmin : 'super admin',
-    Editor : 'editor',
     Admin: 'admin',
+    Editor : 'editor',
     User : 'user',
 }
 
