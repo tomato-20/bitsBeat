@@ -15,6 +15,7 @@ app.use(express.urlencoded({
   extended : false
 }))
 
+app.use('/uploads/pets',express.static('uploads/pets'))
 
 // connect();
 app.use(async(req,res,next) => {
@@ -36,10 +37,17 @@ app.use('/',indexRouter)
 
 app.use('/*', (req,res,next)=>{
     res.status(404).json({
-        msg: `Cannot ${req.method} ${req.url}}`
+        msg: `Cannot ${req.method} ${req.url} `
     })
 })
 
+app.use((err,req,res,next) => {
+  if(!err.status) console.log(err.stack);
+  res.status(err.status || 500).json({
+    error: err.errorType || 'Internal server Error',
+    message: err.message || err.msg || 'Something went wrong',
+  })
+})
 
 module.exports = app;
 

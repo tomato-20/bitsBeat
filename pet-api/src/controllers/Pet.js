@@ -1,10 +1,10 @@
+const petServices = require('../services/Pet')
+
 exports.getAllPet = async (req,res, next) =>{
     const {client,db} = req.dbConfig
     try {
-        res.json({
-            success: true,
-            message: "GET all pet"
-    })
+        let data = await petServices.getAllPet(db)
+        res.status(200).json(data)
     }catch(error) {
         next(error)
     } finally {
@@ -17,10 +17,8 @@ exports.getAllPet = async (req,res, next) =>{
 exports.getOnePet = async (req,res, next) =>{
     const {client,db} = req.dbConfig
     try {
-        res.json({
-            success: true,
-            message: "GET one pet"
-    })
+        let data = await petServices.getOnePet(db,req.params.id)
+        res.status(200).json(data)
     }catch(error) {
         next(error)
     } finally {
@@ -32,11 +30,11 @@ exports.getOnePet = async (req,res, next) =>{
 // add pet
 exports.addPet =  async (req,res,next) => {
     const {client,db} = req.dbConfig
+    let payload = req.body;
+    payload.file = req.file.path
     try {
-        res.json({
-            success: true,
-            message: "POST new Pet"
-    })
+    let data = await petServices.createNewPet(db,payload)
+    res.status(200).json(data)
     }catch(error) {
         next(error)
     } finally {
@@ -49,10 +47,22 @@ exports.addPet =  async (req,res,next) => {
 exports.deleteOnePet = async (req,res, next) =>{
     const {client,db} = req.dbConfig
     try {
-        res.json({
-            success: true,
-            message: "DELETE a pet"
-})
+        let data = await petServices.deleteOnePet(db, req.params.id)
+        res.status(200).json(data)
+    }catch(error) {
+        next(error)
+    } finally {
+        console.log('closing db')
+        await client.close()
+    }
+}
+
+// Upload images
+exports.uploadImages = async (req,res, next) =>{
+    const {client, db} = req.dbConfig;
+    try {
+        let data = await petServices.uploadImages(db, {id: req.body.id, images : req.files})
+        res.status(200).json(data)
     }catch(error) {
         next(error)
     } finally {
