@@ -1,5 +1,5 @@
 const express = require('express');
-
+const redis = require('redis');
 const app = express();
 
 app.use(express.json());
@@ -7,14 +7,52 @@ app.use(express.urlencoded({
     extended: false
 }))
 
-
-app.get('/todos/:id',(req,res,next) => {
+// without redis
+/* app.get('/todos/:id',(req,res,next) => {
     let id = req.params.id;
 
     fetch(`https://jsonplaceholder.typicode.com/todos/${id}`)
         .then(response => response.json())
         .then(data=>res.status(200).json(data))
         .catch(error=> next(new Error('cannot fetch todos')))
+}) */
+
+// using redis
+const redisPort = process.env.REDIS_PORT
+const client = redis.createClient()
+client.on("error", error => {
+    console.log(error)
+})
+
+app.get('/todos/:id',async (req,res,next)=>{
+    const searchId = req.params.id;
+    try{
+        await client.connect();
+        client.get(searchId, async(err, todo)=>{
+            if(err) throw err;
+
+            if(todo){
+                res.status(200).json({
+                    message: 'data fetched from cache',
+                    todo
+                })
+            } else {
+                fetch(`https://jsonplaceholder.typicode.com/todos/${id}`)
+                    .then(response=>response.json())
+                    .then(data=>{
+                        client.set(searchId,data)
+                        res.status.json({message: "cache miss"})
+                    })
+                    .catch(error=>next(error))
+
+            }
+        })
+    }catch(error){
+        console.log(error);
+        next(new Error(error.message))
+    }finally {
+        await client.quit()
+    }
 })
 
 // generic error handler
