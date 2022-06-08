@@ -28,25 +28,24 @@ app.get('/todos/:id',async (req,res,next)=>{
     const searchId = req.params.id;
     try{
         await client.connect();
-        client.get(searchId, async(err, todo)=>{
-            if(err) throw err;
+        let todo = await client.get(searchId)
+        if(todo){
+           return res.status(200).json({
+                message: 'data fetched from cache',
+                data: JSON.parse(todo)
+            })
+        }
 
-            if(todo){
-                res.status(200).json({
-                    message: 'data fetched from cache',
-                    todo
-                })
-            } else {
-                fetch(`https://jsonplaceholder.typicode.com/todos/${id}`)
-                    .then(response=>response.json())
-                    .then(data=>{
-                        client.set(searchId,data)
-                        res.status.json({message: "cache miss"})
-                    })
-                    .catch(error=>next(error))
+        let response =  await fetch(`https://jsonplaceholder.typicode.com/todos/${searchId}`)
+        todo = await response.json() 
 
-            }
+        await client.set(searchId, JSON.stringify(todo))
+
+        return res.status(200).json({
+            message : 'Cache miss',
+            data: todo
         })
+        
     }catch(error){
         console.log(error);
         next(new Error(error.message))
