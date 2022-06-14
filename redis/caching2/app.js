@@ -48,7 +48,7 @@ app.use('/api/v1',rootRouter)
 app.use(async(req,res,next)=>{
   let data =req.responseData 
   if (data) {
-    console.log(await redisHelper.setCache(req,req.url, data))
+    console.log(await redisHelper.setCache(req,req.url, data,20))
     return res.status(200).json({success: true, data})
   } 
   next()

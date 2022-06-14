@@ -37,8 +37,8 @@ const redis = require('ioredis');
         app.locals.cache_db = client
     }
 
-    redisHelper.setCache = async(req,key,value) => {
-        await req.cache_db.set(key,JSON.stringify(value));
+    redisHelper.setCache = async(req,key,value,expiry) => {
+        await req.cache_db.set(key,JSON.stringify(value),'ex',expiry);
     }
 
     redisHelper.getCache = async (req,key) => {
