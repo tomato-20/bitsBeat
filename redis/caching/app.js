@@ -28,6 +28,7 @@ app.get('/todos/:id',async (req,res,next)=>{
     const searchId = req.params.id;
     try{
         await client.connect();
+        
         let todo = await client.get(searchId)
         if(todo){
            return res.status(200).json({
@@ -39,7 +40,7 @@ app.get('/todos/:id',async (req,res,next)=>{
         let response =  await fetch(`https://jsonplaceholder.typicode.com/todos/${searchId}`)
         todo = await response.json() 
 
-        await client.set(searchId, JSON.stringify(todo))
+        await client.set(searchId, JSON.stringify(todo), {EX: 20})
 
         return res.status(200).json({
             message : 'Cache miss',
