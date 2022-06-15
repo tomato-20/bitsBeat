@@ -1,0 +1,33 @@
+{
+  "name": "customerapi",
+  "version": "1.0.0",
+  "description": "hello",
+  "main": "app.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev-start": "nodemon --watch src/ --watch app.js --watch server.js server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomato-20/practise.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomato-20/practise/issues"
+  },
+  "homepage": "https://github.com/tomato-20/practise#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "ioredis": "^5.0.6",
+    "mongodb": "^4.5.0",
+    "redis": "^4.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  }
+}
