@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const logger = require('./src/utils/loggor');
+// const logger = require('./src/utils/loggor');
 const connection = require('./src/config/dbconfig')
 const indexRouter = require('./src/indexRouter');
 

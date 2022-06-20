@@ -1,5 +1,5 @@
-const {Schema, default: mongoose} = require('mongoose');
-const {v4 : uuidv4} = require('uuid') 
+const { Schema, default: mongoose } = require('mongoose');
+const { v4: uuidv4 } = require('uuid')
 const crypt = require('../utils/bcrypt')
 const roles = require('../helper/constants/roles')
 
@@ -9,14 +9,14 @@ let validateEmail = (email) => {
 };
 
 const UserSchema = new Schema({
-    uuid : {
+    uuid: {
         type: String,
-        default: ()=>uuidv4()
+        default: () => uuidv4()
     },
-    username : {
-        type : String,
+    username: {
+        type: String,
         required: true,
-        minlength:3 
+        minlength: 3
     },
     email: {
         type: String,
@@ -27,30 +27,32 @@ const UserSchema = new Schema({
         required: true,
         minlength: 5
     },
-    role : {
+    role: {
         type: String,
         enum: Object.values(roles),
         default: roles.User,
     },
     status: {
         type: String,
-        enum:['pending','active'],
+        enum: ['pending', 'active'],
         default: 'pending'
     },
     deleted_at: {
-        type : Date,
+        type: Date,
     },
     deleted: {
         type: Boolean,
         default: false
-    } 
-},{timestamps: {
-    createdAt : 'created_at',
-    updatedAt : 'updated_at'
-}});
+    }
+}, {
+    timestamps: {
+        createdAt: 'created_at',
+        updatedAt: 'updated_at'
+    }
+});
 
-UserSchema.pre('save',async function (next){
-    if(!this.isModified('password')) {
+UserSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
         return next()
     }
     const hash = await crypt.hash(this.password);
@@ -58,4 +60,4 @@ UserSchema.pre('save',async function (next){
     next();
 })
 
-module.exports = mongoose.model('Users',UserSchema);
+module.exports = mongoose.model('Users', UserSchema);
