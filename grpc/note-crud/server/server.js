@@ -53,7 +53,37 @@ server.addService(customersProto.CustomerService.service, {
                 details: "Not found"
             })
         }
+    },
+
+    insert: (call,callback) => {
+        let customer = call.request;
+        customer.id = uuidv4();
+        customers.push(customer);
+        callback(null,customer)
+    },
+
+    update: (call, callback) => {
+        let id = call.request.id
+        let foundCustomerIndex = customers.findIndex(cus => cus.id == id);
+        if(foundCustomerIndex != -1) {
+            customers[foundCustomerIndex] = call.request;
+            callback(null,call.request)
+        }else {
+            callback({code: grpc.status.NOT_FOUND, details: "Customer not found"})
+        }
+    },
+
+    remove: (call,callback) => {
+        let id = call.request.id
+        let foundCustomerIndex = customers.findIndex(cus => cus.id == id);
+        if(foundCustomerIndex != -1) {
+            customers.slice(foundCustomerIndex,1)
+            callback(null,{})
+        }else {
+            callback({code: grpc.status.NOT_FOUND, details: "Customer not found"})
+        }
     }
+
 })
 
 server.bindAsync('127.0.0.1:33000', grpc.ServerCredentials.createInsecure(),(err,port)=>{

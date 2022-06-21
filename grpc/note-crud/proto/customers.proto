@@ -22,9 +22,9 @@ message CustomerList  {
 service CustomerService {
     rpc GetAll (Empty) returns (CustomerList) {}
     rpc Get(CustomerId) returns (Customer) {}
-    // rpc Insert (Customer) returns (Customer) {}
-    // rpc Update (Customer) returns (Customer) {}
-    // rpc Remove (CustomerId) returns (Empty) {}
+    rpc Insert (Customer) returns (Customer) {}
+    rpc Update (Customer) returns (Customer) {}
+    rpc Remove (CustomerId) returns (Empty) {}
 }
 
 
