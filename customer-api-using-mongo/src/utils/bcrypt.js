@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 require('dotenv').config()
 
-const SALT = process.env.SALT ;
+// const SALT = process.env.SALT ;
 
 /**
  * Hash a provided password
@@ -10,6 +10,7 @@ const SALT = process.env.SALT ;
  */
 exports.hash = async (password) => {
     try {
+        const SALT = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password,SALT);
         return hashedPassword;
     }catch(error) {
