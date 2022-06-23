@@ -1,7 +1,3 @@
-// DB_CONNECTION=mongodb+srv://testuser:test321@customer011.m6iec.mongodb.net/?retryWrites=true&w=majority
-
-// SENDGRID_API_KEY=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
-
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
