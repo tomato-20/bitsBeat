@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { BadRequest } = require("../../utils/errors/errors");
 
 const loginSchema = Joi.object().keys({
     email: Joi.string().email().required(),
@@ -16,7 +17,7 @@ exports.validateUserLogin = async(req,res,next) => {
     try {
         const value = loginSchema.validate(req.body);
         if(value.error) {
-            throw(value.error.details[0].message)
+            throw new BadRequest (value.error)
         }
         next();
     } catch (error) {
@@ -28,7 +29,7 @@ exports.validateRefreshToken = async(req,res,next) => {
     try {
         const value = refreshTokenSchema.validate(req.body);
         if(value.error) {
-            throw(value.error.details[0].message)
+            throw new BadRequest (value.error)
         }
         next();
     } catch (error) {  

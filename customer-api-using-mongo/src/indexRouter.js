@@ -12,7 +12,6 @@ router.use('/admin',adminRouter)
 router.get('/', (req,res,next) => {
   next()
 }, (req,res,next)=>{
-    console.log(req.user)
     res.status(200).json({
         app : "customerAPI",
         version: "1.0.1"
