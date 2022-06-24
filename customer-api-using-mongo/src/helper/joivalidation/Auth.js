@@ -17,7 +17,7 @@ exports.validateUserLogin = async(req,res,next) => {
     try {
         const value = loginSchema.validate(req.body);
         if(value.error) {
-            throw new BadRequest (value.error)
+            throw new BadRequest (value.error.details[0].message)
         }
         next();
     } catch (error) {
@@ -29,7 +29,7 @@ exports.validateRefreshToken = async(req,res,next) => {
     try {
         const value = refreshTokenSchema.validate(req.body);
         if(value.error) {
-            throw new BadRequest (value.error)
+            throw new BadRequest (value.error.details[0].message)
         }
         next();
     } catch (error) {  
