@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start" : "node server/server.js",
-    "client-start" : "node client/index.js"
+    "start": "nodemon --watch client/ --watch server/ server/server.js",
+    "client-start": "nodemon --watch client/ --watch server/ client/index.js"
   },
   "keywords": [],
   "author": "",
@@ -14,8 +14,10 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.6.13",
+    "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "hbs": "^4.2.0",
+    "mongodb": "^4.7.0",
     "uuid": "^8.3.2"
   }
 }

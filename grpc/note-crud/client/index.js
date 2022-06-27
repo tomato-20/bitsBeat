@@ -10,17 +10,7 @@ app.use(express.urlencoded({
     extended: false
 }))
 
-app.get('/', (req, res, next) => {
-    client.getAll(null, (err, response) => {
-        if (!err) {
-            res.json({
-                data: response.customers
-            })
-        } else {
-            res.status(500).json({ message: err.details })
-        }
-    })
-})
+
 
 app.get('/:id', (req, res, next) => {
     client.get({ id: req.params.id }, (err, response) => {
@@ -37,22 +27,19 @@ app.post('/create', (req, res, next) => {
     let name = req.body.name; 
     let age = req.body.age;
     let address = req.body.address ;
-    if(!name || !age || !address) return res.status(400).json({message: "name, age and address are required"})
-    let newCustomer = {name,age,address}
+    let email = req.body.email;
+    if(!name || !age || !address || !email) return res.status(400).json({message: "name, email, age and address are required"})
+    let newCustomer = {name,age,address,email}
     client.insert(newCustomer,(err,response)=>{
-        if(!err) res.status(201).json(response)
+        console.log(response);
+        if(!err) res.status(201).json({id: response.id})
+        else res.status(500).json({message: err.details})
     })
 })
 
 app.post('/update', (req,res,next)=>{
-    let updateCustomer = {
-        id: req.body.id,
-        name: req.body.name,
-        age: req.body.age,
-        address : req.body.address
-    }
 
-    client.update(updateCustomer, (err,response) => {
+    client.update(req.body, (err,response) => {
         if(!err) {
             res.json({message: " user updated successfully", data: response})
         }else {
@@ -61,12 +48,25 @@ app.post('/update', (req,res,next)=>{
     })
 })
 
-app.delete('/remove', (req,res,next)=>{
+app.delete('/delete', (req,res,next)=>{
     client.remove({id: req.body.id},(err,response)=>{
         if(!err) {
             res.json({message: "User deleted successfully"})
         } else {
             res.status(500).json(({message: err.details}))
+        }
+    })
+})
+
+
+app.get('/', (req, res, next) => {
+    client.getAll(null, (err, response) => {
+        if (!err) {
+            res.json({
+                data: response.customers
+            })
+        } else {
+            res.status(500).json({ message: err.details })
         }
     })
 })

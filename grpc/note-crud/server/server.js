@@ -1,7 +1,15 @@
 const path = require('path')
+const { v4: uuidv4 } = require("uuid");
 const PROTO_PATH = path.normalize(__dirname + '/../proto/customers.proto');
 
-const {v4 : uuidv4} = require("uuid");
+const dbhelper = require('../db/db.helper');
+const dbservices = require('../db/customer.db.service')
+
+const app = {};
+
+dbhelper.init(app);
+
+console.log(app)
 
 let grpc = require('@grpc/grpc-js');
 let protoLoader = require('@grpc/proto-loader')
@@ -39,54 +47,86 @@ const server = new grpc.Server();
 let customersProto = grpc.loadPackageDefinition(packageDefinition).customer;
 
 server.addService(customersProto.CustomerService.service, {
-    getAll : (_,callback) => {
-        callback(null, {customers});
-    },
+    getAll: async (_, callback) => {
+        // console.log(app)
+        let customers = app.db.collection('customer');
 
-    get: (call, callback) => {
-        let customer = customers.find(cus => cus.id == call.request.id);
-        if(customer) {
-            callback(null,customer);
-        }else {
-            callback({
-                code : grpc.status.NOT_FOUND,
-                details: "Not found"
-            })
+        try {
+            let data = await dbservices.findAll(customers);
+            return callback(null, { customers: data });
+        } catch (error) {
+            return callback({ details: error })
         }
     },
 
-    insert: (call,callback) => {
-        let customer = call.request;
-        customer.id = uuidv4();
-        customers.push(customer);
-        callback(null,customer)
-    },
+    get: async (call, callback) => {
 
-    update: (call, callback) => {
-        let id = call.request.id
-        let foundCustomerIndex = customers.findIndex(cus => cus.id == id);
-        if(foundCustomerIndex != -1) {
-            customers[foundCustomerIndex] = call.request;
-            callback(null,call.request)
-        }else {
-            callback({code: grpc.status.NOT_FOUND, details: "Customer not found"})
+        let customers = app.db.collection('customer');
+
+        try {
+            let data = await customers.findOne({ id: call.request.id })
+            if (data) return callback(null, data)
+            else return callback({ code: grpc.status.NOT_FOUND, details: `Customer with id : ${call.request.id} Not found` })
+        } catch (error) {
+            callback({ details: error })
         }
     },
 
-    remove: (call,callback) => {
+    insert: async (call, callback) => {
+
+        let customers = app.db.collection('customer')
+
+        let insertData = call.request;
+        insertData.id = uuidv4();
+
+        try {
+            let oldUSer = await customers.findOne({ email: insertData.email })
+            if (oldUSer) return callback({ code: grpc.status.ALREADY_EXISTS, details: "User already exist" })
+            await customers.insert(insertData)
+            callback(null, { id: insertData.id })
+        } catch (error) {
+            return callback({ details: error })
+        }
+    },
+
+    update: async (call, callback) => {
+
+        let customers = app.db.collection('customer')
         let id = call.request.id
-        let foundCustomerIndex = customers.findIndex(cus => cus.id == id);
-        if(foundCustomerIndex != -1) {
-            customers.slice(foundCustomerIndex,1)
-            callback(null,{})
-        }else {
-            callback({code: grpc.status.NOT_FOUND, details: "Customer not found"})
+
+        try {
+            let oldUSer = await customers.findOne({ id })
+            if (!oldUSer) {
+                callback({ code: grpc.status.NOT_FOUND, details: "Customer not found" })
+            } else {
+                let updated = await customers.findOneAndUpdate({ id }, { $set: { ...customers.request } })
+                callback(null, updated.value)
+            }
+        } catch (error) {
+            return callback({ details: error })
+        }
+    },
+
+    remove: async (call, callback) => {
+        const customers = app.db.collection('customer')
+        let id = call.request.id
+
+        try {
+            let foundCustomer = await customers.findOne({ id })
+            if (!foundCustomer) {
+                callback({ code: grpc.status.NOT_FOUND, details: "Customer not found" })
+            } else {
+                await customers.deleteOne({ id })
+                callback(null, {})
+            }
+        } catch (error) {
+            callback({ details: error })
         }
     }
 
 })
 
-server.bindAsync('127.0.0.1:33000', grpc.ServerCredentials.createInsecure(),(err,port)=>{
+server.bindAsync('127.0.0.1:33000', grpc.ServerCredentials.createInsecure(), (err, port) => {
     console.log("server running at http://127.0.0.1:33000");
     server.start()
 })
