@@ -31,7 +31,7 @@ exports.login = async (email,password) => {
             id: existedUser._id,
             role : existedUser.role
         }
-        const token =  generateAccessToken(payload);
+        let token =  generateAccessToken(payload);
 
          // check if there is session for user
         let session = await Sessions.findOne({user_id: existedUser._id});
@@ -48,9 +48,10 @@ exports.login = async (email,password) => {
             const expires_at = dateNow.addSeconds(accessTokenExpiracy);
             session = await Sessions.findOneAndUpdate({user_id: existedUser._id},{is_valid: true, token: token, expires_at})
         } else{
-            return {
-                message: 'User already logged in '
-            }
+            token = session.token;
+            // return  {
+            //     message: 'User already logged in';
+            // }
         }
 
         // find refresh token 
@@ -65,6 +66,7 @@ exports.login = async (email,password) => {
         } 
 
         return {
+            message: "User Logged in!",
             accessToken: token,
             refreshToken: refreshToken.token
         }
